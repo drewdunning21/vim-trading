@@ -41,6 +41,7 @@ def orderPage(scr, order, client, side, q):
     hMenu(scr, col, menuItems)
     side = 'Buy' if side == 0 else 'Sell'
     while 1:
+        updatePriceDisp(scr, q)
         key = scr.getch()
         if key == ord('m') and col != 0:
             # left
@@ -91,18 +92,18 @@ def getPrice(scr, client, side):
 def updatePriceDisp(scr, q):
     try:
         bid, ask = q.get()
-        bid, ask = fixPrice(bid), fixPrice(ask)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        y, x = scr.getmaxyx()
-        scr.attron(curses.color_pair(2))
-        scr.addstr(y // 4, x // 2 - 10, bid)
-        scr.attroff(curses.color_pair(2))
-        scr.attron(curses.color_pair(1))
-        scr.addstr(y // 4, x // 2 + 10, ask)
-        scr.attroff(curses.color_pair(1))
-        scr.refresh()
     except Exception:
         return
+    bid, ask = fixPrice(bid), fixPrice(ask)
+    curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    y, x = scr.getmaxyx()
+    scr.attron(curses.color_pair(2))
+    scr.addstr(y // 4, x // 2 - 10, bid)
+    scr.attroff(curses.color_pair(2))
+    scr.attron(curses.color_pair(1))
+    scr.addstr(y // 4, x // 2 + 10, ask)
+    scr.attroff(curses.color_pair(1))
+    scr.refresh()
 
 def fixPrice(price):
     return price + '.00' if price[-2] != '.' else price + '0'
