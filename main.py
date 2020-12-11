@@ -1,4 +1,5 @@
 from BybitAcct import BybitAcct
+import time
 from pprint import pprint
 import curses
 import json
@@ -18,10 +19,10 @@ def main(scr):
     log.info('other here')
     hMenu(scr, col, menuItems)
     p, q = startUpdater(scr)
+    scr.nodelay(1)
     while 1:
         updatePriceDisp(scr, q)
         key = scr.getch()
-        log.info(key)
         if key == ord('m') and col != 0:
             # left
             col -= 1
@@ -31,6 +32,7 @@ def main(scr):
             col += 1
             hMenu(scr, col, menuItems)
         elif key == 10:
+            scr.clear()
             orderPage(scr, col, client, col, q)
             hMenu(scr, col, menuItems)
 
@@ -52,6 +54,7 @@ def orderPage(scr, order, client, side, q):
             col += 1
             hMenu(scr, col, menuItems)
         elif key == 10:
+            scr.clear()
             if col == 0:
                 marketOrder(scr, client, side, q)
             elif col == 1:
@@ -90,20 +93,31 @@ def getPrice(scr, client, side):
     return 0
 
 def updatePriceDisp(scr, q):
+    start = time.time()
+    printt('starting update')
+    printt(start)
     try:
-        bid, ask = q.get()
-    except Exception:
+        bid, ask = q.get(False)
+    except Exception as e:
+        printt(e)
         return
+    printt('got prices. fixing now')
+    printt(time.time() - start)
     bid, ask = fixPrice(bid), fixPrice(ask)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     y, x = scr.getmaxyx()
+    # displays the bid
     scr.attron(curses.color_pair(2))
-    scr.addstr(y // 4, x // 2 - 10, bid)
+    scr.addstr(y // 4, x // 2 - 5 - len(bid), bid)
     scr.attroff(curses.color_pair(2))
+    # displays the ask
     scr.attron(curses.color_pair(1))
-    scr.addstr(y // 4, x // 2 + 10, ask)
+    scr.addstr(y // 4, x // 2 + 5, ask)
     scr.attroff(curses.color_pair(1))
     scr.refresh()
+    printt('done')
+    printt(time.time() - start)
+    printt('\n')
 
 def fixPrice(price):
     return price + '.00' if price[-2] != '.' else price + '0'
@@ -171,13 +185,33 @@ def vMenu(scr, row, menuItems):
     scr.refresh()
 
 def hMenu(scr, col, menuItems):
-    scr.clear()
+    if len(menuItems) % 2 != 0: oddMenu(scr, col, menuItems)
+    else: evenMenu(scr, col, menuItems)
+
+def evenMenu(scr, col, menuItems):
+    # scr.clear()
+    h, w = scr.getmaxyx()
+    y = h//2
+    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+    x = w//2 - (10 * (len(menuItems)//2))
+    for i, val in enumerate(menuItems):
+        x += len(val) // 2 + 1
+        if col == i:
+            scr.attron(curses.color_pair(1))
+            scr.addstr(y,x,val)
+            scr.attroff(curses.color_pair(1))
+        else:
+            scr.addstr(y,x,val)
+        x += 10
+    scr.refresh()
+
+def oddMenu(scr, col, menuItems):
+    # scr.clear()
     h, w = scr.getmaxyx()
     y = h//2
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     for i, val in enumerate(menuItems):
-        x = w//2 - (10 * ((len(menuItems)//2) - i)) - len(val)
-        log.info(x)
+        x = w//2 - (10 * ((len(menuItems)//2) - i)) - (len(val)//2)
         if col == i:
             scr.attron(curses.color_pair(1))
             scr.addstr(y,x,val)
@@ -192,6 +226,11 @@ def loadConfig():
 
 def setupLogger():
     log.basicConfig(filename='log.log',  level=log.DEBUG)
+
+def printt(txt):
+    file = open('text.txt', 'a')
+    file.write(str(txt) + '\n')
+    file.close()
 
 if __name__ == '__main__':
     curses.wrapper(main)
