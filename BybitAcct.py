@@ -1,5 +1,6 @@
 import bybit
-import time
+import pprint
+import datetime
 
 class BybitAcct:
 
@@ -10,16 +11,20 @@ class BybitAcct:
 
     def limitOrder(self, symbol, amnt, price, side):
         order = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Limit",qty=amnt,price=price,time_in_force="GoodTillCancel").result()
+        self.checkReq(order[0], 'limit order')
         order = order[0]['result']
         rej = order['reject_reason']
         orderId = order['order_id']
         return orderId if rej == 'EC_NoError' else ''
 
     def marketOrder(self, symbol, amnt, side):
-        self.client.Order.Order_new(side=side,symbol=symbol,order_type="Market",qty=amnt,price=8300,time_in_force="GoodTillCancel").result()
+        req = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Market",qty=amnt,price=8300,time_in_force="GoodTillCancel").result()
+        self.checkReq(req[0], 'market order')
 
     def getBook(self, symbol):
-        return self.client.Market.Market_orderbook(symbol=symbol).result()
+        book =  self.client.Market.Market_orderbook(symbol=symbol).result()
+        self.checkReq(book[0], 'get book')
+        return book
 
     def getSpread(self, symbol):
         book = self.getBook(symbol)
@@ -29,64 +34,36 @@ class BybitAcct:
         return spread
 
     def getStatus(self, symbol, orderId):
-        status = self.client.Order.Order_query(symbol=symbol, order_id=orderId).result()[0]['result']['order_status']
-        return status
+        status = self.client.Order.Order_query(symbol=symbol, order_id=orderId).result()
+        self.checkReq(status[0], 'get status')
+        return status[0]['result']
 
     def replaceOrder(self, orderId, symbol, price, amnt):
         newId = None
         while not newId:
-            order = self.client.Order.Order_replace(symbol=symbol, order_id=orderId, p_r_qty=amnt, p_r_price=price).result()
+            order = self.client.Order.Order_replace(symbol=symbol, order_id=orderId, p_r_qty=str(amnt), p_r_price=price).result()
+            self.checkReq(order[0], 'replace order')
             order = order[0]['result']
             if order != None:
                 newId = order['order_id']
         return newId
 
-    def chaseBuy(self, symbol, amnt, maxPrice=1000000000):
-        spread = self.getSpread(symbol)
-        # make the initial order
-        bid = float(spread['bid']['price']) - 5
-        orderId = self.limitOrder(symbol, amnt, bid, 'Buy')
-        status = ''
-        if not orderId:
-            print('Order failed')
-            return
-        while status != 'Filled':
-            spread = self.getSpread(symbol)
-            newBid = float(spread['bid']['price'])
-            # check if price greater than max price
-            if newBid > maxPrice:
-                return 0
-            # if not, check if the cur bid is greater than cur order bid
-            if newBid != bid:
-                # if so, adjust cur order bid
-                orderId = self.replaceOrder(orderId, symbol, str(newBid), str(amnt))
-                bid = newBid
-            status = self.getStatus(symbol, orderId)
-        print('order filled')
-        return
+    def getPositions(self, symbol):
+        pos = (self.client.Positions.Positions_myPosition(symbol=symbol).result())
+        self.checkReq(pos[0], 'get positions')
+        return pos[0]['result']
 
-    def chaseSell(self, symbol, amnt, minPrice=0):
-        spread = self.getSpread(symbol)
-        # make the initial order
-        ask = float(spread['ask']['price']) + 5
-        orderId = self.limitOrder(symbol, amnt, ask, 'Sell')
-        status = ''
-        if not orderId:
-            print('Order failed')
-            return
-        while status != 'Filled':
-            spread = self.getSpread(symbol)
-            newAsk = float(spread['ask']['price'])
-            # check if price greater than max price
-            if newAsk < minPrice:
-                return 0
-            # if not, check if the cur bid is greater than cur order bid
-            if newAsk != ask:
-                # if so, adjust cur order bid
-                orderId = self.replaceOrder(orderId, symbol, str(newAsk), str(amnt))
-                ask = newAsk
-            status = self.getStatus(symbol, orderId)
-        print('order filled')
+    def getPriceData(self, time, period):
+        return self.client.Kline.Kline_get(symbol="BTCUSD", interval=time, **{'from':period}).result()
 
-    def replaec(self, symbol, orderId):
-        self.client.Order.Order_replace(symbol=symbol, order_id=orderId).result()
+    def checkReq(self, req, name: str):
+        ct = str(datetime.datetime.now()).split('.')[0]
+        # printt('[' + ct + '] ' + name + ' ' + str(req['rate_limit_status']) + ' ' + str(req['ret_code']))
+        if req['ret_code'] != 0:
+            printt('[' + ct + '] ' + name + ' ' + str(req['ret_code']))
+            printt(req)
+
+def printt(txt):
+    file = open('./text.txt', 'a')
+    file.write(str(txt) + '\n')
+    file.close()

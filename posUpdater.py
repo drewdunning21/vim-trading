@@ -1,14 +1,12 @@
 from BybitAcct import BybitAcct
 import json
 
-def getPrices(q,x):
+def getPos(q,x):
     key, priv = loadConfig()
     client = BybitAcct(key, priv)
-    count = 0
     while 1:
-        count += 1
-        spread = client.getSpread('BTCUSD')
-        q.put((spread['bid']['price'],spread['ask']['price']))
+        pos = client.getPositions('BTCUSD')
+        q.put(pos)
 
 def loadConfig():
     confFile = json.load(open('./config.json', 'r'))
