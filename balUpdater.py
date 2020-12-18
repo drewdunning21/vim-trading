@@ -2,13 +2,13 @@ from BybitAcct import BybitAcct
 import time
 import json
 
-def getPos(q,x):
+def getBal(q,x):
     key, priv = loadConfig()
     client = BybitAcct(key, priv)
     while 1:
-        pos = client.getPositions('BTCUSD')
+        pos = client.getBalance('BTC')
         q.put(pos)
-        time.sleep(2)
+        time.sleep(1)
 
 def loadConfig():
     confFile = json.load(open('./config.json', 'r'))

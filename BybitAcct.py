@@ -56,6 +56,12 @@ class BybitAcct:
     def getPriceData(self, time, period):
         return self.client.Kline.Kline_get(symbol="BTCUSD", interval=time, **{'from':period}).result()
 
+    def getBalance(self, symbol):
+        req = self.client.Wallet.Wallet_getBalance(coin=symbol).result()
+        if req is None: return req
+        self.checkReq(req[0], 'get balance')
+        return req[0]['result'][symbol]
+
     def checkReq(self, req, name: str):
         ct = str(datetime.datetime.now()).split('.')[0]
         # printt('[' + ct + '] ' + name + ' ' + str(req['rate_limit_status']) + ' ' + str(req['ret_code']))

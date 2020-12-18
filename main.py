@@ -4,22 +4,21 @@ import json
 from multiprocessing import Process, Queue
 from priceUpdate import getPrices
 from posUpdater import getPos
+from balUpdater import getBal
 import math
-from chart import displayChart
 import time
 
 def main(scr):
     client = connect(scr)
     initColors()
-    uP, uQ = startUpdater()
-    pP, pQ = startPosUpdater(scr)
+    procs, qs = startUpdaters()
     scr.nodelay(1)
     col = 0
     menuItems = ['Buy', 'Sell']
     hMenu(scr, col, menuItems)
+    btc = True
     while 1:
-        updatePriceDisp(scr, uQ)
-        updatePosDisp(scr, pQ)
+        runUpdaters(scr, qs, btc)
         key = scr.getch()
         if key == ord('m') and col != 0:
             # left
@@ -27,12 +26,19 @@ def main(scr):
         elif key == ord('i') and col != len(menuItems) - 1:
             # right
             col += 1
-        elif key == 10:
+        elif key == 10 or key == ord('t'):
             scr.clear()
-            orderPage(scr, col, client, col, uQ)
-        elif key == ord('c'):
-            displayChart(scr, client, '60')
+            orderPage(scr, col, client, col, qs, btc)
+        elif key == ord('d'):
+            btc = not btc
         hMenu(scr, col, menuItems)
+        time.sleep(.01)
+
+def startUpdaters():
+    uP, uQ = startPriceUpdater()
+    pP, pQ = startPosUpdater()
+    bP, bQ = startBalUpdater()
+    return [uP, pP, bP], [uQ, pQ, bQ]
 
 def connect(scr):
     curses.curs_set(0)
@@ -45,14 +51,14 @@ def connect(scr):
     scr.clear()
     return client
 
-def orderPage(scr, order, client, side, uQ):
-    updatePriceDisp(scr, uQ)
+def orderPage(scr, order, client, side, qs, btc):
+    runUpdaters(scr, qs, btc)
     menuItems = ['Market', 'Limit', 'Chase']
     col = 1
     side = 'Buy' if side == 0 else 'Sell'
     while 1:
         hMenu(scr, col, menuItems)
-        updatePriceDisp(scr, uQ)
+        runUpdaters(scr, qs, btc)
         key = scr.getch()
         if key == ord('m') and col != 0:
             # left
@@ -64,54 +70,54 @@ def orderPage(scr, order, client, side, uQ):
             hMenu(scr, col, menuItems)
         elif key == 10:
             scr.clear()
-            if col == 0:    order = marketOrder(scr, client, side, uQ)
-            elif col == 1:  order = limitOrder(scr, client, side, uQ)
-            else:           order = chaseOrder(scr, client, side, uQ)
+            if col == 0:    order = marketOrder(scr, client, side, qs, btc)
+            elif col == 1:  order = limitOrder(scr, client, side, qs, btc)
+            else:           order = chaseOrder(scr, client, side, qs, btc)
             if order:
                 scr.clear()
                 return
         elif key == ord('s'):
             scr.clear()
             return
+        time.sleep(.01)
 
-def marketOrder(scr, client, side, uQ):
-    updatePriceDisp(scr, uQ)
-    amnt = getAmnt('Enter size ($)', scr, uQ)
+def marketOrder(scr, client, side, qs, btc):
+    runUpdaters(scr, qs, btc)
+    amnt = getAmnt('Enter size ($)', scr, qs, btc)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
     client.marketOrder('BTCUSD', amnt, side)
     return True
 
-def limitOrder(scr, client, side, uQ):
-    amnt = getAmnt('Enter size ($)', scr, uQ)
+def limitOrder(scr, client, side, qs, btc):
+    amnt = getAmnt('Enter size ($)', scr, qs, btc)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
-    price = getAmnt('Enter price ($)', scr, uQ)
+    price = getAmnt('Enter price ($)', scr, qs, btc)
     if price == -1: return False
     client.limitOrder('BTCUSD', amnt, price, side)
     return True
 
-def chaseOrder(scr, client, side, uQ):
-    amnt = getAmnt('Enter size ($)', scr, uQ)
+def chaseOrder(scr, client, side, qs, btc):
+    amnt = getAmnt('Enter size ($)', scr, qs, btc)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
-    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, uQ, scr)
-    else:               chaseSell(client, 'BTCUSD', amnt, uQ, scr)
+    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, qs, scr, btc)
+    else:               chaseSell(client, 'BTCUSD', amnt, qs, scr, btc)
     return True
 
-def chaseBuy(client: BybitAcct, symbol: str, amnt: int, uQ: Queue, scr, maxPrice=100000000):
+def chaseBuy(client: BybitAcct, symbol: str, amnt: int, qs, scr, btc, maxPrice=100000000):
     spread = client.getSpread(symbol)
     # make the initial order
     bid = float(spread['bid']['price'])
     orderId = client.limitOrder(symbol, amnt, bid, 'Buy')
     y, x = scr.getmaxyx()
-    box = makeBox(scr, 3, 52, y // 2 - 2, x // 2 - 27)
     orderStatusPage(scr, '-', '-')
     status = ''
     if not orderId:
         return
     while status != 'Filled':
-        updatePriceDisp(scr, uQ)
+        runUpdaters(scr, qs, btc)
         spread = client.getSpread(symbol)
         newBid = float(spread['bid']['price'])
         # check if price greater than max price
@@ -127,19 +133,18 @@ def chaseBuy(client: BybitAcct, symbol: str, amnt: int, uQ: Queue, scr, maxPrice
         orderStatusPage(scr, orderStatus['cum_exec_qty'], orderStatus['qty'])
     return orderId
 
-def chaseSell(client: BybitAcct, symbol: str, amnt: int, uQ: Queue, scr, minPrice=0):
+def chaseSell(client: BybitAcct, symbol: str, amnt: int, qs, scr, btc, minPrice=0):
     spread = client.getSpread(symbol)
     # make the initial order
     ask = float(spread['ask']['price'])
     orderId = client.limitOrder(symbol, amnt, ask, 'Sell')
     y, x = scr.getmaxyx()
-    box = makeBox(scr, 3, 52, y // 2 - 2, x // 2 - 27)
     orderStatusPage(scr, '-', '-')
     status = ''
     if not orderId:
         return
     while status != 'Filled':
-        updatePriceDisp(scr, uQ)
+        runUpdaters(scr, qs, btc)
         spread = client.getSpread(symbol)
         newAsk = float(spread['ask']['price'])
         # check if price greater than max price
@@ -174,17 +179,28 @@ def makeBox(scr, h: int, w: int, y, x):
     box.refresh()
     return box
 
-def startUpdater():
+def startPriceUpdater():
     q = Queue()
     p = Process(target=getPrices, args=(q, 1))
     p.start()
     return p, q
 
-def startPosUpdater(scr):
+def startPosUpdater():
     q = Queue()
     p = Process(target=getPos, args=(q, 1))
     p.start()
     return p, q
+
+def startBalUpdater():
+    q = Queue()
+    p = Process(target=getBal, args=(q, 1))
+    p.start()
+    return p, q
+
+def runUpdaters(scr, qs, btc):
+    updatePriceDisp(scr, qs[0])
+    updatePosDisp(scr, qs[1])
+    updateBalDisp(scr, qs[2], btc)
 
 prevBid = '00'
 prevAsk = '00'
@@ -212,7 +228,8 @@ def updatePosDisp(scr, q):
         pos = q.get(False)
     if pos is None: return
     y, x = scr.getmaxyx()
-    startY, startX = math.floor(y * .7), math.floor(x * .01)
+    startY, startX = math.floor(y * .7), x//2 - 40,
+    # startY, startX = math.floor(y * .7), math.floor(x * .01)
     scr.attron(curses.color_pair(3))
     scr.addstr(startY, startX, 'Positions')
     scr.attroff(curses.color_pair(3))
@@ -220,58 +237,50 @@ def updatePosDisp(scr, q):
     space = 0
     # scr.addstr(startY + 1, space, '_________________________________________________________________________________')
     for val in labels:
-        scr.addstr(startY + 2, space, '|')
+        scr.addstr(startY + 2, startX + space , '|')
         scr.addstr(startY + 2, startX + space + 10 - (len(val)//2), val, curses.A_UNDERLINE)
         space += 20
-    scr.addstr(startY + 2, space, '|')
+    scr.addstr(startY + 2, startX + space, '|')
     space = 0
     items = ['size', 'entry_price', 'unrealised_pnl', 'realised_pnl']
     for i, val in enumerate(items):
-        scr.addstr(startY + 3, space, '|')
+        scr.addstr(startY + 3, startX + space, '|')
         try:
             scr.addstr(startY + 3, startX + space + 10 - (len(str(pos[val]))//2), str(pos[val]))
         except Exception:
             pass
         space += 20
     # scr.addstr(startY + 4, 0, '_________________________________________________________________________________')
-    scr.addstr(startY + 3, space, '|')
-  # 'result': {'auto_add_margin': 1,
-  #            'bust_price': '0',
-  #            'created_at': '2020-03-13T00:23:50Z',
-  #            'cross_seq': 2744386453,
-  #            'cum_realised_pnl': '-0.03598737',
-  #            'deleverage_indicator': 0,
-  #            'effective_leverage': '100',
-  #            'entry_price': '0',
-  #            'id': 1411452,
-  #            'is_isolated': False,
-  #            'leverage': '100',
-  #            'liq_price': '0',
-  #            'oc_calc_data': '{"blq":0,"slq":0,"bmp":0,"smp":0,"bv2c":0.0115075,"sv2c":0.0114925}',
-  #            'occ_closing_fee': '0',
-  #            'occ_funding_fee': '0',
-  #            'order_margin': '0',
-  #            'position_margin': '0',
-  #            'position_seq': 2469917006,
-  #            'position_status': 'Normal',
-  #            'position_value': '0',
-  #            'realised_pnl': '0.00000458',
-  #            'risk_id': 1,
-  #            'side': 'None',
-  #            'size': 0,
-  #            'stop_loss': '0',
-  #            'symbol': 'BTCUSD',
-  #            'take_profit': '0',
-  #            'trailing_stop': '0',
-  #            'unrealised_pnl': 0,
-  #            'updated_at': '2020-12-13T00:48:18.918482Z',
-  #            'user_id': 801736,
-  #            'wallet_balance': '0.21031367'},
+    scr.addstr(startY + 3, startX + space, '|')
+
+prevBal = 00.00
+def updateBalDisp(scr, q, btc):
+    global prevAsk
+    global prevBal
+    y, x = scr.getmaxyx()
+    info = None
+    while not q.empty():
+        info = q.get(False)
+        prevBal = info['equity']
+    if info is None: bal = prevBal
+    else: bal = info['equity']
+    msg = 'Balance: ₿'
+    scr.addstr(1, x - x//4 + len(msg) + 1, '                 ')
+    if btc:
+        scr.addstr(1, x - x//4 + len(msg) + 1, str(bal))
+    else:
+        msg = 'Balance: $'
+        dolBal = bal*float(prevAsk)
+        dolBal = f"{dolBal:,}"
+        split = dolBal.split('.')
+        dolBal = split[0] + '.' + split[1][0:2]
+        scr.addstr(1, x - x//4 + len(msg) + 1, dolBal)
+    scr.addstr(1, x - x//4, msg)
 
 def fixPrice(price):
     return price + '.00' if price[-2] != '.' else price + '0'
 
-def getAmnt(msg, scr, uQ):
+def getAmnt(msg, scr, qs, btc):
     scr.clear()
     y, x = scr.getmaxyx()
     scr.addstr(y//2 - 3,x//2 - (len(msg)//2),msg)
@@ -282,12 +291,12 @@ def getAmnt(msg, scr, uQ):
     amnt = ''
     spot = x // 2 - 22
     scr.addstr(y // 2 - 1, spot - 1, '$')
-    updatePriceDisp(scr, uQ)
+    runUpdaters(scr, qs, btc)
     while 1:
         key = scr.getch()
         if key == -1: continue
         val = chr(key)
-        updatePriceDisp(scr, uQ)
+        runUpdaters(scr, qs, btc)
         if key == 10:
             return float(amnt)
         elif key == 263 and len(amnt) != 0:
@@ -306,6 +315,7 @@ def getAmnt(msg, scr, uQ):
         elif val == 's':
             scr.clear()
             return -1
+        time.sleep(.01)
 
 def rewriteNum(scr, amnt, x, y):
     spot = x // 2 - 22
