@@ -58,7 +58,9 @@ class BybitAcct:
 
     def getBalance(self, symbol):
         req = self.client.Wallet.Wallet_getBalance(coin=symbol).result()
-        if req is None: return req
+        if req[0] is None: return req
+        if req[0]['result'] is None: return req
+        if req[0]['result'][symbol] is None: return req
         self.checkReq(req[0], 'get balance')
         return req[0]['result'][symbol]
 
