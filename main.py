@@ -1,9 +1,10 @@
 import curses, math, time, json
 from BybitAcct import BybitAcct
 from multiprocessing import Process, Queue
-from priceUpdate import getPrices
+from priceUpdater import getPrices
 from posUpdater import getPos
 from balUpdater import getBal
+from chart import updateChart
 
 def main(scr):
     conf = loadConfig()
@@ -18,6 +19,7 @@ def main(scr):
     while 1:
         runUpdaters(scr, qs, btc)
         key = scr.getch()
+        if key == curses.KEY_RESIZE: scr.clear()
         if key == ord('m') and col != 0:
             # left
             col -= 1
@@ -32,9 +34,14 @@ def main(scr):
         elif key == ord('a'):
             scr.clear()
             conf = settingsPage(scr, conf)
+        elif key == ord('c'):
+            startChartUpdater('60')
+            scr.clear()
+            chartPage(scr)
         elif key == ord('q'):
             exit()
         hMenu(scr, col, menuItems)
+        scr.refresh()
         time.sleep(.01)
 
 ''' PAGES '''
@@ -72,10 +79,6 @@ def orderPage(scr, order: int, client: BybitAcct, qs: list, btc: bool, conf: dic
 
 # settings page
 def settingsPage(scr, conf: dict) -> dict:
-    y, x = scr.getmaxyx()
-    setStr: str = 'Settings'
-    addstr(scr, y//4,x//2 - len(setStr)//2, setStr, 3)
-    scr.refresh()
     row: int = 0
     initSettings(scr, conf, row)
     while 1:
@@ -111,25 +114,38 @@ def settingsPage(scr, conf: dict) -> dict:
     return conf
 
 def initSettings(scr, conf: dict, row: int) -> None:
+    y, x = scr.getmaxyx()
+    setStr: str = 'Settings'
+    addstr(scr, y//4,x//2 - len(setStr)//2, setStr, 0, bold=True)
     stop: bool = conf['autosize']
     risk: int = conf['risk']
-    y, x = scr.getmaxyx()
     # auto stop
     startY = y//4
-    addstr(scr, startY + 5, x//2 - len('Autosize: Yes No')//2, 'Autosize:', 0, under=(row==0))
+    addstr(scr, startY + 5, x//2 - len('Autosize: Yes No')//2, 'Autosize:', 0, stand=(row==0))
     yes, no = False, True
     if stop: yes, no = no, yes
-    addstr(scr, startY + 5, x//2 + 3, 'Yes', 0, stand=yes)
-    addstr(scr, startY + 5, x//2 + 7, 'No', 0, stand=no)
+    addstr(scr, startY + 5, x//2 + 3, 'Yes', 0, under=yes)
+    addstr(scr, startY + 5, x//2 + 7, 'No', 0, under=no)
     # risk amount (%)
-    addstr(scr, startY + 10, x//2 - (len('Risk (%): ' + str(risk) + 'Edit') + 2)//2, 'Risk (%):', 0, under=(row==1))
+    addstr(scr, startY + 10, x//2 - (len('Risk (%): ' + str(risk) + 'Edit') + 2)//2, 'Risk (%):', 0, stand=(row==1))
     yes, no = False, True
     if stop: yes, no = no, yes
-    addstr(scr, startY + 10, x//2 + 3, str(risk) + '%', 0, stand=False)
-    addstr(scr, startY + 10, x//2 + 3 + len(str(risk)) + 2, 'Edit', 0, stand=True)
+    addstr(scr, startY + 10, x//2 + 3, str(risk) + '%', 0, under=False)
+    addstr(scr, startY + 10, x//2 + 3 + len(str(risk)) + 2, 'Edit', 0, under=True)
     # save button
-    addstr(scr, startY + 15, x//2 - len('Save')//2, 'Save', 0, stand=True, under=(row==2))
+    addstr(scr, startY + 15, x//2 - len('Save')//2, 'Save', 0,  stand=(row==2))
     scr.refresh()
+
+def chartPage(scr):
+    scr.clear()
+    key = -1
+    while key != ord('s'):
+        y, x = scr.getmaxyx()
+        addstr(scr, y//4, x//2 - len('Chart Settings')//2, 'Chart Settings', 0)
+        key = scr.getch()
+        if key == curses.KEY_RESIZE: scr.clear()
+    scr.clear()
+    return
 
 ''' ORDERS '''
 
@@ -157,7 +173,7 @@ def limitOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dic
     if price == -1: return False
     # get the stop loss
     sl = getAmnt('Enter stop-loss ($)', scr, qs, btc)
-    if price == -1: return False
+    if sl == -1: return False
     # get trade size
     auto = conf['autosize']
     if auto: amnt = getSize(conf, sl, price=price)
@@ -170,7 +186,14 @@ def limitOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dic
 
 # chase order
 def chaseOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dict) -> bool:
-    amnt = getAmnt('Enter size ($)', scr, qs, btc)
+    global prevAsk
+    # get the stop loss
+    sl = getAmnt('Enter stop-loss ($)', scr, qs, btc)
+    if sl == -1: return False
+    # get trade size
+    auto = conf['autosize']
+    if auto: amnt = getSize(conf, sl, prevAsk)
+    else: amnt = getAmnt('Enter size ($)', scr, qs, btc)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
     if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, qs, scr, btc)
@@ -282,6 +305,17 @@ def startBalUpdater():
     p.start()
     return p, q
 
+# starts the chart updater
+chartStarted = False
+def startChartUpdater(timeP):
+    global chartStarted
+    if chartStarted: return
+    chartStarted = not chartStarted
+    q = Queue()
+    p = Process(target=updateChart, args=(q, timeP))
+    p.start()
+    return p, q
+
 # runs all the updaters
 def runUpdaters(scr, qs, btc):
     updatePriceDisp(scr, qs[0])
@@ -306,17 +340,18 @@ def updatePriceDisp(scr, q):
     scr.refresh()
 
 # updates the position display
+prevPos = {}
 def updatePosDisp(scr, q):
+    global prevPos
     pos = None
     while not q.empty():
         pos = q.get(False)
-    if pos is None: return
+        prevPos = pos
+    if pos is None: pos = prevPos
     y, x = scr.getmaxyx()
     startY, startX = math.floor(y * .7), x//2 - 40,
     # startY, startX = math.floor(y * .7), math.floor(x * .01)
-    scr.attron(curses.color_pair(3))
-    scr.addstr(startY, startX, 'Positions')
-    scr.attroff(curses.color_pair(3))
+    addstr(scr, startY, startX, 'Positions', 0, bold=True)
     labels = ['Size', 'Entry Price', 'Unrealized PNL', 'Realized PNL']
     space = 0
     # scr.addstr(startY + 1, space, '_________________________________________________________________________________')
@@ -327,7 +362,7 @@ def updatePosDisp(scr, q):
     scr.addstr(startY + 2, startX + space, '|')
     space = 0
     items = ['size', 'entry_price', 'unrealised_pnl', 'realised_pnl']
-    for i, val in enumerate(items):
+    for val in items:
         scr.addstr(startY + 3, startX + space, '|')
         try:
             scr.addstr(startY + 3, startX + space + 10 - (len(str(pos[val]))//2), str(pos[val]))
@@ -500,9 +535,9 @@ def evenMenu(scr, col, menuItems):
     for i, val in enumerate(menuItems):
         x += len(val) // 2 + 1
         if col == i:
-            addstr(scr, y, x, val, 1)
+            addstr(scr, y, x, val, 0, stand=True)
         else:
-            scr.addstr(y,x,val)
+            addstr(scr, y, x, val, 0)
         x += 10
     scr.refresh()
 
@@ -514,31 +549,18 @@ def oddMenu(scr, col, menuItems):
     for i, val in enumerate(menuItems):
         x = w//2 - (10 * ((len(menuItems)//2) - i)) - (len(val)//2)
         if col == i:
-            addstr(scr, y, x, val, 1)
+            addstr(scr, y, x, val, 0, stand=True)
         else:
-            scr.addstr(y,x,val)
+            addstr(scr, y, x, val, 0)
     scr.refresh()
 
 # adds a string to the screen with a specified color
 def addstr(scr, y: int, x: int, msg: str, color: int, under: bool = False, bold: bool = False, stand: bool = False):
-    attrs = getAttrs(color, under, bold, stand)
-    scr.attron(attrs)
-    scr.addstr(y, x, msg)
-    scr.attroff(attrs)
-
-def getAttrs(color: int, under: bool = False, bold: bool = False, stand: bool = False):
     attrs = curses.color_pair(color)
-    # add attributes
     if bold: attrs += curses.A_BOLD
     if under: attrs += curses.A_UNDERLINE
     if stand: attrs += curses.A_STANDOUT
-    # if stand: attrs += curses.A_STANDOUT
-    return attrs
-
-def addAttrs(attrs, attr):
-    if attrs == None: attrs = attr
-    else: attrs += attr
-    return attrs
+    scr.addstr(y, x, msg, attrs)
 
 # prints to the text file
 def printt(txt):
@@ -558,6 +580,7 @@ def connect(scr, conf):
     key, priv = conf['key'], conf['secret']
     client = BybitAcct(key, priv)
     scr.clear()
+    scr.refresh()
     return client
 
 # initializes the color pairs

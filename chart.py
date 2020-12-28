@@ -1,27 +1,43 @@
 from BybitAcct import BybitAcct
-import curses
-import json
-import pprint
-import time
-import math
+import json, time, math
+import mplfinance as mpf
+import pandas as pd
+import datetime as dt
+import pandas as pd
+import matplotlib.animation as animation
 
-def displayChart(scr, client: BybitAcct, period: str):
-    y, x = scr.getmaxyx()
-    scr.clear()
-    scr.addstr(y//2, x//2, 'Loading...')
-    scr.refresh()
+def main():
+    global client
+    key, priv = loadConfig()
+    client = BybitAcct(key, priv)
+    fig = mpf.figure()
+    ax = fig.add_subplot()
+    return fig, ax, client
+
+def animateFunc(ival):
+    global timeP
+    global client
+    global ax
+    data = getDict(client, timeP)
+    ax.clear()
+    mpf.plot(data,ax=ax, type='candle')
+
+def getDict(client, timeP) -> pd.DataFrame:
     now: float = time.time()
-    start: int = math.floor(now - (now % 3600)) - (200 * 3600)
-    data: dict = client.getPriceData(period, start)
-    scr.clear()
-    scr.attron(curses.color_pair(3))
-    scr.addstr(y//2, x//2, ' ')
-    scr.attroff(curses.color_pair(3))
-    scr.refresh()
-    key: int = -1
-    while key != ord('t'):
-        key = scr.getch()
-
+    start: int = math.floor(now - (200 * int(timeP) * 60))
+    data: dict = client.getPriceData(timeP, start)['result']
+    ohlcDict: dict = {'Open': [], 'High': [], 'Low': [], 'Close': []}
+    dates = []
+    for val in data:
+        ohlcDict['Open'].append(float(val['open']))
+        ohlcDict['High'].append(float(val['high']))
+        ohlcDict['Low'].append(float(val['low']))
+        ohlcDict['Close'].append(float(val['close']))
+        dates.append(dt.datetime.utcfromtimestamp(val['open_time']).strftime('%m-%d-%Y %H:%M:%S'))
+    index = pd.DatetimeIndex(dates)
+    df = pd.DataFrame.from_dict(ohlcDict)
+    df.set_index(index, inplace=True)
+    return df
 
 def connect():
     key, priv = loadConfig()
@@ -31,3 +47,15 @@ def connect():
 def loadConfig():
     confFile = json.load(open('./config.json', 'r'))
     return confFile['key'], confFile['secret']
+
+timeP=None
+client=None
+ax=None
+def updateChart(q, x):
+    global timeP
+    global client
+    global ax
+    timeP = x
+    fig, ax, client = main()
+    ani = animation.FuncAnimation(fig, animateFunc, interval=200)
+    mpf.show()

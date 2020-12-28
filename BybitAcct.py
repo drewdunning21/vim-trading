@@ -1,5 +1,5 @@
 import bybit
-import pprint
+# import pprint
 import datetime
 
 class BybitAcct:
@@ -54,7 +54,7 @@ class BybitAcct:
         return pos[0]['result']
 
     def getPriceData(self, time, period):
-        return self.client.Kline.Kline_get(symbol="BTCUSD", interval=time, **{'from':period}).result()
+        return self.client.Kline.Kline_get(symbol="BTCUSD", interval=time, **{'from':period}).result()[0]
 
     def getBalance(self, symbol):
         req = self.client.Wallet.Wallet_getBalance(coin=symbol).result()
