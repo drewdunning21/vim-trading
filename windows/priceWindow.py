@@ -1,28 +1,35 @@
-import curses
 from winClass import winClass
 from priceUpdater import getPrices
 from multiprocessing import Process, Queue
+from typing import Any
 
 class priceWindow(winClass):
 
-    def __init__(self, scr, h, w, y, x):
+    def __init__(self, scr: Any, h: int, w: int, y: int, x: int):
         winClass.__init__(self, scr, h, w, y, x)
         self.bid: str = '-'
         self.ask: str = '-'
         self.last: str = '-'
         self.p, self.q = self.getPQ()
-        self.win.box()
         self.win.refresh()
 
+    ''' DISPLAY UPDATER '''
+
     def updateDisp(self):
+        ran = False
         while not self.q.empty():
             self.bid, self.ask = self.fixPrice(self.q.get(False))
+            ran = True
+        if ran: return
+        self.win.erase()
         y, x = self.win.getmaxyx()
         # displays the bid
-        self.addstr(1, 2, self.bid, 2)
+        self.addstr(1, x//2 - (10 + len(self.bid)//2), self.bid, 2)
         # displays the ask
-        self.addstr(y//4, x//2 + 5, self.ask, 1)
-        self.scr.refresh()
+        self.addstr(1, x//2 + (10 - len(self.ask)//2), self.ask, 1)
+        self.win.box()
+        self.win.refresh()
+        # self.scr.refresh()
 
     def getPQ(self):
         q = Queue()
