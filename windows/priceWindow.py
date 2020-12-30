@@ -1,5 +1,5 @@
-from winClass import winClass
-from priceUpdater import getPrices
+from .winClass import winClass
+from updaters.priceUpdater import getPrices
 from multiprocessing import Process, Queue
 from typing import Any
 

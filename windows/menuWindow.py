@@ -1,7 +1,4 @@
-from winClass import winClass
-from balUpdater import getBal
-from multiprocessing import Process, Queue
-from priceWindow import priceWindow
+from .winClass import winClass
 from typing import Any
 
 class menuWindow(winClass):

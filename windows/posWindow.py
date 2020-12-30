@@ -1,5 +1,5 @@
-from winClass import winClass
-from posUpdater import getPos
+from .winClass import winClass
+from updaters.posUpdater import getPos
 from multiprocessing import Process, Queue
 from typing import Any
 

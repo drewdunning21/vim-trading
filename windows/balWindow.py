@@ -1,7 +1,7 @@
-from winClass import winClass
-from balUpdater import getBal
+from .winClass import winClass
+from updaters.balUpdater import getBal
 from multiprocessing import Process, Queue
-from priceWindow import priceWindow
+from .priceWindow import priceWindow
 from typing import Any
 
 class balWindow(winClass):
