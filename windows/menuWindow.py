@@ -3,15 +3,15 @@ from typing import Any
 
 class menuWindow(winClass):
 
-    def __init__(self, scr: Any, h: int, w: int, y: int, x: int, items: list, selected: int):
+    def __init__(self, scr: Any, h: int, w: int, y: int, x: int, items: list, sel: int):
         winClass.__init__(self, scr, h, w, y, x)
         self.bal: int = 0
         self.items: list = items
-        self.selected: int = selected
-        self.makeMenu(selected - 1)
+        self.selected: int = sel
+        self.makeMenu(sel, True)
 
-    def makeMenu(self, newSel: int):
-        if newSel == self.selected: return
+    def makeMenu(self, newSel: int, force: bool):
+        if newSel == self.selected and not force: return
         elif newSel >= len(self.items) or newSel < 0: return
         else: self.selected = newSel
         y, x = self.scr.getmaxyx()
@@ -20,9 +20,16 @@ class menuWindow(winClass):
         for i, val in enumerate(self.items):
             if self.selected == i: self.addstr(1, (startX + (i * 10)) + (5 - (len(val)//2)), val, 0, stand=True)
             else: self.addstr(1, (startX + (i * 10)) + (5 - (len(val)//2)), val, 0)
-        self.win.refresh()
+        self.win.noutrefresh()
 
     ''' GETTERS '''
 
-    def getSel(self):
+    def getSel(self) -> int:
         return self.selected
+
+    ''' SETTERS '''
+
+    def setMenu(self, items: list, sel: int):
+        self.items = items
+        self.selected = sel
+        self.makeMenu(sel, True)

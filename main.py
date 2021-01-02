@@ -1,10 +1,10 @@
 import curses, math, time, json
 from BybitAcct import BybitAcct
 from multiprocessing import Process, Queue
-from priceUpdater import getPrices
-from posUpdater import getPos
-from balUpdater import getBal
-from chart import updateChart
+from updaters.priceUpdater import getPrices
+from updaters.posUpdater import getPos
+from updaters.balUpdater import getBal
+from updaters.chart import updateChart
 
 def main(scr):
     conf = loadConfig()

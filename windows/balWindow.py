@@ -21,6 +21,7 @@ class balWindow(winClass):
         newInfo = None
         while not self.q.empty():
             newInfo = self.q.get(False)
+        self.win.erase()
         if newInfo is not None: self.info = newInfo
         self.bal = self.info['equity']
         msg: str = 'Balance: ₿'
@@ -29,6 +30,7 @@ class balWindow(winClass):
             self.addstr(1, len(msg) + 2, str(self.bal), 0)
         else:
             prevAsk: str = self.priceWin.getAsk()
+            if prevAsk == '-': return
             msg = 'Balance: $'
             dolBal = self.bal*float(prevAsk)
             dolBal = f"{dolBal:,}"
@@ -36,7 +38,10 @@ class balWindow(winClass):
             dolBal = split[0] + '.' + split[1][0:2]
             self.addstr(1, 1 + len(msg), dolBal, 0)
         self.win.addstr(1, 1, msg)
-        self.win.refresh()
+        self.win.noutrefresh()
+
+    def switchSign(self):
+        self.btc = not self.btc
 
     def getPQ(self):
         q = Queue()

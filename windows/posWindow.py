@@ -2,18 +2,20 @@ from .winClass import winClass
 from updaters.posUpdater import getPos
 from multiprocessing import Process, Queue
 from typing import Any
+from .priceWindow import priceWindow
 
 class posWindow(winClass):
 
-    def __init__(self, scr, h: int, w: int, y: int, x: int):
+    def __init__(self, scr: Any, h: int, w: int, y: int, x: int, priceWin: priceWindow):
         winClass.__init__(self, scr, h, w, y, x)
         self.pos: dict = {}
         self.RPnl: int = 0
         self.UPnl: int = 0
         self.size: int = 0
         self.entry: int = 0
-        self.p, self.q = self.getPQ()
-        self.win.refresh()
+        self.btc = True
+        self.priceWin: priceWindow = priceWin
+        self.setPQ()
 
     ''' DISPLAY UPDATER '''
 
@@ -22,11 +24,8 @@ class posWindow(winClass):
         while not self.q.empty():
             newPos = self.q.get(False)
         if newPos != None: self.pos = newPos
-        # if pos is None: pos = prevPos
-        y, x = self.win.getmaxyx()
+        self.win.erase()
         startY, startX = 0,0
-        # startY, startX = math.floor(y * .7), math.floor(x * .01)
-        # self.addstr(startY, startX, 'Positions', 0, bold=True)
         labels: list = ['Size', 'Entry Price', 'Unrealized PNL', 'Realized PNL']
         space = 0
         for val in labels:
@@ -38,18 +37,27 @@ class posWindow(winClass):
         for val in items:
             self.addstr(startY + 2, startX + space, '|', 0)
             try:
-                self.addstr(startY + 2, startX + space + 10 - (len(str(self.pos[val]))//2), str(self.pos[val]), 0)
+                if 'pnl' in val:
+                    if not self.btc:
+                        self.pos[val] = float(self.pos[val]) * float(self.priceWin.getAsk())
+                        self.addstr(startY + 2, startX + space + 10 - (len(str(self.pos[val]))//2), '$' + str(self.pos[val]), 0)
+                    else:
+                        self.addstr(startY + 2, startX + space + 10 - (len(str(self.pos[val]))//2), str(self.pos[val]), 0)
+                else:
+                    self.addstr(startY + 2, startX + space + 10 - (len(str(self.pos[val]))//2), str(self.pos[val]), 0)
             except Exception:
                 pass
             space += 20
         self.win.box()
-        self.win.refresh()
+        self.win.noutrefresh()
 
-    def getPQ(self):
-        q = Queue()
-        p = Process(target=getPos, args=(q, 1))
-        p.start()
-        return p, q
+    def setPQ(self):
+        self.q = Queue()
+        self.p = Process(target=getPos, args=(self.q, 1))
+        self.p.start()
+
+    def switchSign(self):
+        self.btc = not self.btc
 
     ''' GETTERS '''
 

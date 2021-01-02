@@ -11,7 +11,6 @@ class priceWindow(winClass):
         self.ask: str = '-'
         self.last: str = '-'
         self.p, self.q = self.getPQ()
-        self.win.refresh()
 
     ''' DISPLAY UPDATER '''
 
@@ -28,8 +27,7 @@ class priceWindow(winClass):
         # displays the ask
         self.addstr(1, x//2 + (10 - len(self.ask)//2), self.ask, 1)
         self.win.box()
-        self.win.refresh()
-        # self.scr.refresh()
+        self.win.noutrefresh()
 
     def getPQ(self):
         q = Queue()

@@ -17,3 +17,6 @@ class winClass:
         if under: attrs += curses.A_UNDERLINE
         if stand: attrs += curses.A_STANDOUT
         self.win.addstr(y, x, msg, attrs)
+
+    def switchSign(self):
+        pass
