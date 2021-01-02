@@ -48,10 +48,6 @@ def main(scr: Any) -> None:
         elif val == 'q': break
         time.sleep(.01)
 
-def runUpdaters(wins: dict) -> None:
-    for val in wins.values():
-        val.updateDisp()
-
 ''' PAGES '''
 
 def orderPage(scr: Any, wins: dict, menu: menuWindow, client: BybitAcct, conf: dict) -> None:
@@ -250,6 +246,10 @@ def chaseSell(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, minPri
 
 ''' UTILITY '''
 
+def runUpdaters(wins: dict) -> None:
+    for val in wins.values():
+        val.updateDisp()
+
 # gets a number amount as input from the user
 def getAmnt(msg: str, scr: Any, wins: dict) -> float:
     scr.clear()
@@ -416,3 +416,4 @@ def saveConfig(conf: dict) -> None:
 
 if __name__ == '__main__':
     curses.wrapper(main)
+    quit()
