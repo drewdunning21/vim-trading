@@ -44,6 +44,8 @@ def main(scr: Any) -> None:
             scr.erase()
             menu.setMenu(['Buy', 'Sell'], 0)
             scr.refresh()
+        elif val == 'h' or key == 10:
+            histPage(scr)
         # exit the program
         elif val == 'q': break
         time.sleep(.01)
@@ -138,6 +140,10 @@ def initSettings(scr, conf: dict, row: int) -> None:
     addstr(scr, startY + 15, x//2 - len('Save')//2, 'Save', 0,  stand=(row==2))
     scr.refresh()
 
+# history page
+def histPage(scr: Any):
+    pass
+
 ''' ORDERS '''
 
 # market order
@@ -174,22 +180,25 @@ def limitOrder(scr: Any, client: BybitAcct, side: str, conf: dict, wins: dict) -
     return True
 
 # chase order
-def chaseOrder(scr, client: BybitAcct, side: str, conf: dict, wins: dict) -> bool:
+def chaseOrder(scr: Any, client: BybitAcct, side: str, conf: dict, wins: dict) -> bool:
     # get the stop loss
     sl = getAmnt('Enter stop-loss ($)', scr, wins)
     if sl == -1: return False
+    # get the take profit
+    tp = getAmnt('Enter stop-loss ($)', scr, wins)
+    if tp == -1: return False
     # get trade size
     auto = conf['autosize']
     if auto: amnt = getSize(conf, sl, wins['priceWin'].getAsk(), wins)
     else: amnt = getAmnt('Enter size ($)', scr, wins)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
-    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, scr, wins)
-    else:               chaseSell(client, 'BTCUSD', amnt, scr, wins)
+    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, scr, wins, conf, sl, tp)
+    else:               chaseSell(client, 'BTCUSD', amnt, scr, wins, conf, sl, tp)
     return True
 
 # chase buy
-def chaseBuy(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, maxPrice=100000000):
+def chaseBuy(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, conf: dict, sl, tp, maxPrice=100000000):
     spread = client.getSpread(symbol)
     # make the initial order
     bid = float(spread['bid']['price'])
@@ -209,6 +218,7 @@ def chaseBuy(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, maxPric
         # if not, check if the cur bid is greater than cur order bid
         if newBid != bid:
             # if so, adjust cur order bid
+            if conf['auto']: amnt = int(str(getSize(conf, sl, wins['priceWin'].getAsk(), wins)).split('.')[0])
             orderId = client.replaceOrder(orderId, symbol, str(newBid), str(amnt))
             bid = newBid
         orderStatus = client.getStatus(symbol, orderId)
@@ -217,7 +227,7 @@ def chaseBuy(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, maxPric
     return orderId
 
 # chase sell
-def chaseSell(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, minPrice=0):
+def chaseSell(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, conf: dict, sl, tp, minPrice=0):
     spread = client.getSpread(symbol)
     # make the initial order
     ask = float(spread['ask']['price'])
@@ -290,7 +300,7 @@ def getAmnt(msg: str, scr: Any, wins: dict) -> float:
     return float(amnt)
 
 # gets a percent input from the user
-def getPcnt(msg, scr) -> float:
+def getPcnt(msg: str, scr: Any) -> float:
     scr.clear()
     y, x = scr.getmaxyx()
     scr.addstr(y//2 - 3,x//2 - (len(msg)//2),msg)

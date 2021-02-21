@@ -264,3 +264,117 @@
 {'ret_code': 10002, 'ret_msg': 'invalid request, please check your timestamp and recv_window param. req_timestamp: 1609292163000 server_timestamp: 1609292170355 recv_window: 5000', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1609292170.355255'}
 [2020-12-29 23:14:37] get positions 10002
 {'ret_code': 10002, 'ret_msg': 'invalid request, please check your timestamp and recv_window param. req_timestamp: 1609308870000 server_timestamp: 1609308877447 recv_window: 5000', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1609308877.447160'}
+[2021-01-21 14:42:08] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265328.563457', 'rate_limit_status': 95, 'rate_limit_reset_ms': 1611265328562, 'rate_limit': 100}
+[2021-01-21 14:42:10] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265328.907020', 'rate_limit_status': 94, 'rate_limit_reset_ms': 1611265328905, 'rate_limit': 100}
+[2021-01-21 14:42:11] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265331.146913', 'rate_limit_status': 93, 'rate_limit_reset_ms': 1611265331145, 'rate_limit': 100}
+[2021-01-21 14:42:13] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265331.490678', 'rate_limit_status': 92, 'rate_limit_reset_ms': 1611265331489, 'rate_limit': 100}
+[2021-01-21 14:42:14] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265333.880365', 'rate_limit_status': 91, 'rate_limit_reset_ms': 1611265333878, 'rate_limit': 100}
+[2021-01-21 14:42:14] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265334.220761', 'rate_limit_status': 90, 'rate_limit_reset_ms': 1611265334218, 'rate_limit': 100}
+[2021-01-21 14:42:14] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265334.557691', 'rate_limit_status': 89, 'rate_limit_reset_ms': 1611265334556, 'rate_limit': 100}
+[2021-01-21 14:42:15] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265334.915429', 'rate_limit_status': 88, 'rate_limit_reset_ms': 1611265334913, 'rate_limit': 100}
+[2021-01-21 14:42:15] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265335.250678', 'rate_limit_status': 87, 'rate_limit_reset_ms': 1611265335249, 'rate_limit': 100}
+[2021-01-21 14:42:15] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265335.588274', 'rate_limit_status': 86, 'rate_limit_reset_ms': 1611265335586, 'rate_limit': 100}
+[2021-01-21 14:42:16] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265335.924180', 'rate_limit_status': 85, 'rate_limit_reset_ms': 1611265335922, 'rate_limit': 100}
+[2021-01-21 14:42:16] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265336.261414', 'rate_limit_status': 84, 'rate_limit_reset_ms': 1611265336260, 'rate_limit': 100}
+[2021-01-21 14:42:16] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265336.597755', 'rate_limit_status': 83, 'rate_limit_reset_ms': 1611265336596, 'rate_limit': 100}
+[2021-01-21 14:42:17] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265336.937646', 'rate_limit_status': 82, 'rate_limit_reset_ms': 1611265336936, 'rate_limit': 100}
+[2021-01-21 14:42:17] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265337.300154', 'rate_limit_status': 81, 'rate_limit_reset_ms': 1611265337298, 'rate_limit': 100}
+[2021-01-21 14:42:17] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265337.661608', 'rate_limit_status': 80, 'rate_limit_reset_ms': 1611265337660, 'rate_limit': 100}
+[2021-01-21 14:42:18] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265338.014999', 'rate_limit_status': 79, 'rate_limit_reset_ms': 1611265338013, 'rate_limit': 100}
+[2021-01-21 14:42:18] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265338.387963', 'rate_limit_status': 78, 'rate_limit_reset_ms': 1611265338386, 'rate_limit': 100}
+[2021-01-21 14:42:18] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265338.730227', 'rate_limit_status': 77, 'rate_limit_reset_ms': 1611265338728, 'rate_limit': 100}
+[2021-01-21 14:42:19] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265339.073993', 'rate_limit_status': 76, 'rate_limit_reset_ms': 1611265339072, 'rate_limit': 100}
+[2021-01-21 14:42:19] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265339.409879', 'rate_limit_status': 75, 'rate_limit_reset_ms': 1611265339408, 'rate_limit': 100}
+[2021-01-21 14:42:19] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265339.754436', 'rate_limit_status': 74, 'rate_limit_reset_ms': 1611265339752, 'rate_limit': 100}
+[2021-01-21 14:42:20] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265340.120358', 'rate_limit_status': 73, 'rate_limit_reset_ms': 1611265340119, 'rate_limit': 100}
+[2021-01-21 14:42:20] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265340.453708', 'rate_limit_status': 72, 'rate_limit_reset_ms': 1611265340452, 'rate_limit': 100}
+[2021-01-21 14:42:21] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265340.856562', 'rate_limit_status': 71, 'rate_limit_reset_ms': 1611265340855, 'rate_limit': 100}
+[2021-01-21 14:42:21] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265341.213031', 'rate_limit_status': 70, 'rate_limit_reset_ms': 1611265341211, 'rate_limit': 100}
+[2021-01-21 14:42:21] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265341.553946', 'rate_limit_status': 69, 'rate_limit_reset_ms': 1611265341552, 'rate_limit': 100}
+[2021-01-21 14:42:22] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265341.895829', 'rate_limit_status': 68, 'rate_limit_reset_ms': 1611265341894, 'rate_limit': 100}
+[2021-01-21 14:42:22] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265342.235236', 'rate_limit_status': 67, 'rate_limit_reset_ms': 1611265342233, 'rate_limit': 100}
+[2021-01-21 14:42:22] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265342.570271', 'rate_limit_status': 66, 'rate_limit_reset_ms': 1611265342568, 'rate_limit': 100}
+[2021-01-21 14:42:23] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265342.923975', 'rate_limit_status': 65, 'rate_limit_reset_ms': 1611265342922, 'rate_limit': 100}
+[2021-01-21 14:42:23] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265343.258603', 'rate_limit_status': 64, 'rate_limit_reset_ms': 1611265343257, 'rate_limit': 100}
+[2021-01-21 14:42:23] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265343.593568', 'rate_limit_status': 63, 'rate_limit_reset_ms': 1611265343592, 'rate_limit': 100}
+[2021-01-21 14:42:24] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265343.932750', 'rate_limit_status': 62, 'rate_limit_reset_ms': 1611265343931, 'rate_limit': 100}
+[2021-01-21 14:42:24] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265344.269445', 'rate_limit_status': 61, 'rate_limit_reset_ms': 1611265344267, 'rate_limit': 100}
+[2021-01-21 14:42:24] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265344.648744', 'rate_limit_status': 60, 'rate_limit_reset_ms': 1611265344647, 'rate_limit': 100}
+[2021-01-21 14:42:25] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265344.983418', 'rate_limit_status': 59, 'rate_limit_reset_ms': 1611265344982, 'rate_limit': 100}
+[2021-01-21 14:42:25] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265345.318948', 'rate_limit_status': 58, 'rate_limit_reset_ms': 1611265345317, 'rate_limit': 100}
+[2021-01-21 14:42:25] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265345.666740', 'rate_limit_status': 57, 'rate_limit_reset_ms': 1611265345665, 'rate_limit': 100}
+[2021-01-21 14:42:26] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265346.008623', 'rate_limit_status': 56, 'rate_limit_reset_ms': 1611265346007, 'rate_limit': 100}
+[2021-01-21 14:42:26] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265346.357611', 'rate_limit_status': 55, 'rate_limit_reset_ms': 1611265346356, 'rate_limit': 100}
+[2021-01-21 14:42:26] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265346.710258', 'rate_limit_status': 54, 'rate_limit_reset_ms': 1611265346708, 'rate_limit': 100}
+[2021-01-21 14:42:27] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265347.052704', 'rate_limit_status': 53, 'rate_limit_reset_ms': 1611265347051, 'rate_limit': 100}
+[2021-01-21 14:42:27] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265347.389447', 'rate_limit_status': 52, 'rate_limit_reset_ms': 1611265347387, 'rate_limit': 100}
+[2021-01-21 14:42:28] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265347.836194', 'rate_limit_status': 51, 'rate_limit_reset_ms': 1611265347832, 'rate_limit': 100}
+[2021-01-21 14:42:28] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265348.201157', 'rate_limit_status': 50, 'rate_limit_reset_ms': 1611265348199, 'rate_limit': 100}
+[2021-01-21 14:42:28] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265348.537649', 'rate_limit_status': 49, 'rate_limit_reset_ms': 1611265348536, 'rate_limit': 100}
+[2021-01-21 14:42:29] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265348.876565', 'rate_limit_status': 48, 'rate_limit_reset_ms': 1611265348874, 'rate_limit': 100}
+[2021-01-21 14:42:29] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265349.209466', 'rate_limit_status': 47, 'rate_limit_reset_ms': 1611265349207, 'rate_limit': 100}
+[2021-01-21 14:42:29] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265349.547771', 'rate_limit_status': 46, 'rate_limit_reset_ms': 1611265349546, 'rate_limit': 100}
+[2021-01-21 14:42:30] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265349.885913', 'rate_limit_status': 45, 'rate_limit_reset_ms': 1611265349884, 'rate_limit': 100}
+[2021-01-21 14:42:30] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265350.239275', 'rate_limit_status': 44, 'rate_limit_reset_ms': 1611265350237, 'rate_limit': 100}
+[2021-01-21 14:42:30] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265350.593987', 'rate_limit_status': 43, 'rate_limit_reset_ms': 1611265350592, 'rate_limit': 100}
+[2021-01-21 14:42:31] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265350.953463', 'rate_limit_status': 42, 'rate_limit_reset_ms': 1611265350952, 'rate_limit': 100}
+[2021-01-21 14:42:31] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265351.317206', 'rate_limit_status': 41, 'rate_limit_reset_ms': 1611265351315, 'rate_limit': 100}
+[2021-01-21 14:42:31] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265351.651558', 'rate_limit_status': 40, 'rate_limit_reset_ms': 1611265351649, 'rate_limit': 100}
+[2021-01-21 14:42:32] replace order 30032
+{'ret_code': 30032, 'ret_msg': 'order_status[Filled] cannot execute replace', 'ext_code': '', 'ext_info': '', 'result': None, 'time_now': '1611265352.024073', 'rate_limit_status': 39, 'rate_limit_reset_ms': 1611265352022, 'rate_limit': 100}
