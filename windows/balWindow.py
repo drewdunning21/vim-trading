@@ -23,6 +23,7 @@ class balWindow(winClass):
             newInfo = self.q.get(False)
         self.win.erase()
         if newInfo is not None: self.info = newInfo
+        printt(self.info)
         self.bal = self.info['equity']
         msg: str = 'Balance: ₿'
         self.win.addstr(1, 1, '                 ')
@@ -59,3 +60,9 @@ class balWindow(winClass):
 
     def getInfo(self):
         return self.info
+
+
+def printt(txt):
+    file = open('./text.txt', 'a')
+    file.write(str(txt) + '\n')
+    file.close()

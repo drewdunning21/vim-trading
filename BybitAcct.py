@@ -8,17 +8,19 @@ class BybitAcct:
         self.priv = priv
         self.client = bybit.bybit(test=False, api_key=self.key, api_secret=self.priv)
 
-    def limitOrder(self, symbol, amnt, price, side, sl: float = 0, tp: float = 0):
+    def limitOrder(self, symbol: str, amnt: int, price: float, side: str, sl: float = 0, tp: float = 0) -> str:
         order = None
-        if (sl != 0 and tp != 0): order = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Limit",qty=amnt,price=price,time_in_force="GoodTillCancel", stop_loss = sl, take_profit = tp).result()
+        op: str  = 'Buy' if side == 'Sell' else 'Sell'
+        if (sl != 0): order = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Limit",qty=amnt,price=price,time_in_force="GoodTillCancel", stop_loss = sl).result()
         else: order = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Limit",qty=amnt,price=price,time_in_force="GoodTillCancel").result()
+        if tp != 0: self.client.Order.Order_new(side=op,symbol=symbol,order_type="Limit",qty=amnt,price=tp,time_in_force="GoodTillCancel").result()
         self.checkReq(order[0], 'limit order')
         order = order[0]['result']
-        rej = order['reject_reason']
-        orderId = order['order_id']
+        rej: str = order['reject_reason']
+        orderId: str = order['order_id']
         return orderId if rej == 'EC_NoError' else ''
 
-    def marketOrder(self, symbol, amnt, side):
+    def marketOrder(self, symbol: str, amnt: int, side: str):
         req = self.client.Order.Order_new(side=side,symbol=symbol,order_type="Market",qty=amnt,price=8300,time_in_force="GoodTillCancel").result()
         self.checkReq(req[0], 'market order')
 
@@ -47,6 +49,8 @@ class BybitAcct:
             order = order[0]['result']
             if order != None:
                 newId = order['order_id']
+            if 'ret_msg' in order and order['ret_msg'] == 'order_status[Filled] cannot execute replace':
+                return '-0'
         return newId
 
     def getPositions(self, symbol):

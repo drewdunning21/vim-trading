@@ -1,84 +1,88 @@
 import curses, math, time, json
 from BybitAcct import BybitAcct
-from multiprocessing import Process, Queue
-from updaters.priceUpdater import getPrices
-from updaters.posUpdater import getPos
-from updaters.balUpdater import getBal
-from updaters.chart import updateChart
+from windows.priceWindow import priceWindow
+from windows.posWindow import posWindow
+from windows.balWindow import balWindow
+from windows.menuWindow import menuWindow
+from windows.winClass import winClass
+from typing import Any
 
-def main(scr):
-    conf = loadConfig()
-    client = connect(scr, conf)
+def main(scr: Any) -> None:
     initColors()
-    procs, qs = startUpdaters()
+    conf: dict  = loadConfig()
+    client: BybitAcct = connect(scr, conf)
     scr.nodelay(1)
-    col = 0
-    menuItems = ['Buy', 'Sell']
-    hMenu(scr, col, menuItems)
-    btc = True
+    wins: dict[str, winClass] = getWins(scr)
+    y, x = scr.getmaxyx()
+    menu: menuWindow = menuWindow(scr, 3, x, y//2-1, 0, ['Buy', 'Sell'], 0)
     while 1:
-        runUpdaters(scr, qs, btc)
-        key = scr.getch()
-        if key == curses.KEY_RESIZE: scr.clear()
-        if key == ord('m') and col != 0:
-            # left
-            col -= 1
-        elif key == ord('i') and col != len(menuItems) - 1:
-            # right
-            col += 1
-        elif key == 10 or key == ord('t'):
-            scr.clear()
-            orderPage(scr, col, client, qs, btc, conf)
-        elif key == ord('d'):
-            btc = not btc
-        elif key == ord('a'):
-            scr.clear()
-            conf = settingsPage(scr, conf)
-        elif key == ord('c'):
-            startChartUpdater('60')
-            scr.clear()
-            chartPage(scr)
-        elif key == ord('q'):
-            exit()
-        hMenu(scr, col, menuItems)
+        key: int = scr.getch()
+        runUpdaters(wins)
         scr.refresh()
+        if key == -1: continue
+        val = chr(key)
+        # left
+        if val == 'm':
+            menu.makeMenu(menu.getSel() - 1, False)
+        # right
+        elif val == 'i':
+            menu.makeMenu(menu.getSel() + 1, False)
+        # changs currency display
+        elif val == 'd':
+            wins['balWin'].switchSign()
+            wins['posWin'].switchSign()
+        # settings page
+        elif val == 'a':
+            scr.erase()
+            settingsPage(scr, conf)
+            menu.makeMenu(menu.getSel(), True)
+            scr.refresh()
+        # select
+        elif val == 't' or key == 10:
+            menu.win.erase()
+            orderPage(scr, wins, menu, client, conf)
+            scr.erase()
+            menu.setMenu(['Buy', 'Sell'], 0)
+            scr.refresh()
+        elif val == 'h' or key == 10:
+            histPage(scr)
+        # exit the program
+        elif val == 'q': break
         time.sleep(.01)
 
 ''' PAGES '''
 
-# order page
-def orderPage(scr, order: int, client: BybitAcct, qs: list, btc: bool, conf: dict):
-    runUpdaters(scr, qs, btc)
-    menuItems = ['Market', 'Limit', 'Chase']
-    col = 1
-    side = 'Buy' if order == 0 else 'Sell'
+def orderPage(scr: Any, wins: dict, menu: menuWindow, client: BybitAcct, conf: dict) -> None:
+    if menu.getSel() == 0: side: str = 'Buy'
+    else: side: str = 'Sell'
+    menu.setMenu(['Market', 'Limit', 'Chase'], 1)
     while 1:
-        hMenu(scr, col, menuItems)
-        runUpdaters(scr, qs, btc)
-        key = scr.getch()
-        if key == ord('m') and col != 0:
-            # left
-            col -= 1
-            hMenu(scr, col, menuItems)
-        elif key == ord('i') and col != len(menuItems) - 1:
-            # right
-            col += 1
-            hMenu(scr, col, menuItems)
-        elif key == 10:
-            scr.clear()
-            if col == 0:    order = marketOrder(scr, client, side, qs, btc, conf)
-            elif col == 1:  order = limitOrder(scr, client, side, qs, btc, conf)
-            else:           order = chaseOrder(scr, client, side, qs, btc, conf)
-            if order:
-                scr.clear()
-                return
-        elif key == ord('s'):
-            scr.clear()
+        key: int = scr.getch()
+        runUpdaters(wins)
+        scr.refresh()
+        if key == -1: continue
+        val: str = chr(key)
+        if val == 's':
+            menu.win.erase()
+            menu.setMenu(['Buy', 'Sell'], 0)
+            return
+        if val == 'm':
+            menu.makeMenu(menu.getSel() - 1, False)
+        if val == 'i':
+            menu.makeMenu(menu.getSel() + 1, False)
+        if val == 'd':
+            wins['balWin'].switchSign()
+            wins['posWin'].switchSign()
+        if val == 't' or key == 10:
+            sel: int = menu.getSel()
+            if sel == 0: marketOrder(scr, client, side, conf, wins)
+            if sel == 1: limitOrder(scr, client, side, conf, wins)
+            if sel == 2: chaseOrder(scr, client, side, conf, wins)
             return
         time.sleep(.01)
 
 # settings page
-def settingsPage(scr, conf: dict) -> dict:
+def settingsPage(scr: Any, conf: dict) -> dict:
     row: int = 0
     initSettings(scr, conf, row)
     while 1:
@@ -136,48 +140,39 @@ def initSettings(scr, conf: dict, row: int) -> None:
     addstr(scr, startY + 15, x//2 - len('Save')//2, 'Save', 0,  stand=(row==2))
     scr.refresh()
 
-def chartPage(scr):
-    scr.clear()
-    key = -1
-    while key != ord('s'):
-        y, x = scr.getmaxyx()
-        addstr(scr, y//4, x//2 - len('Chart Settings')//2, 'Chart Settings', 0)
-        key = scr.getch()
-        if key == curses.KEY_RESIZE: scr.clear()
-    scr.clear()
-    return
+# history page
+def histPage(scr: Any):
+    pass
 
 ''' ORDERS '''
 
 # market order
-def marketOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dict) -> bool:
-    global prevAsk
-    runUpdaters(scr, qs, btc)
+def marketOrder(scr: Any, client: BybitAcct, side: str,  conf: dict, wins: dict) -> bool:
+    runUpdaters(wins)
     auto = conf['autosize']
     # get the stop loss
-    sl = getAmnt('Enter stop-loss ($)', scr, qs, btc)
+    sl = getAmnt('Enter stop-loss ($)', scr, wins)
     if sl == -1: return False
     # gets the trades size
-    if auto: amnt = getSize(conf, sl, prevAsk)
-    else: amnt = getAmnt('Enter size ($)', scr, qs, btc)
+    if auto: amnt = getSize(conf, sl, wins['priceWin'].getAsk(), wins)
+    else: amnt = getAmnt('Enter size ($)', scr, wins)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
-    printt('amnt ' + str(amnt))
-    # client.marketOrder('BTCUSD', amnt, side)
+    client.marketOrder('BTCUSD', amnt, side)
     return True
 
 # limit order
-def limitOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dict) -> bool:
+def limitOrder(scr: Any, client: BybitAcct, side: str, conf: dict, wins: dict) -> bool:
     # get trade price
-    price = getAmnt('Enter price ($)', scr, qs, btc)
+    price = getAmnt('Enter price ($)', scr, wins)
     if price == -1: return False
     # get the stop loss
-    sl = getAmnt('Enter stop-loss ($)', scr, qs, btc)
+    sl = getAmnt('Enter stop-loss ($)', scr, wins)
     if sl == -1: return False
     # get trade size
     auto = conf['autosize']
-    if auto: amnt = getSize(conf, sl, price=price)
-    else: amnt = getAmnt('Enter size ($)', scr, qs, btc)
+    if auto: amnt = getSize(conf, sl, wins['priceWin'].getAsk(), wins)
+    else: amnt = getAmnt('Enter size ($)', scr, wins)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
     # make the trade
@@ -185,34 +180,36 @@ def limitOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dic
     return True
 
 # chase order
-def chaseOrder(scr, client: BybitAcct, side: str, qs: list, btc: bool, conf: dict) -> bool:
-    global prevAsk
+def chaseOrder(scr: Any, client: BybitAcct, side: str, conf: dict, wins: dict) -> bool:
     # get the stop loss
-    sl = getAmnt('Enter stop-loss ($)', scr, qs, btc)
+    sl = getAmnt('Enter stop-loss ($)', scr, wins)
     if sl == -1: return False
+    # get the take profit
+    tp = getAmnt('Enter take-profit ($)', scr, wins)
+    if tp == -1: return False
     # get trade size
     auto = conf['autosize']
-    if auto: amnt = getSize(conf, sl, prevAsk)
-    else: amnt = getAmnt('Enter size ($)', scr, qs, btc)
+    if auto: amnt = getSize(conf, sl, wins['priceWin'].getAsk(), wins)
+    else: amnt = getAmnt('Enter size ($)', scr, wins)
     amnt = int(str(amnt).split('.')[0])
     if amnt == -1: return False
-    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, qs, scr, btc)
-    else:               chaseSell(client, 'BTCUSD', amnt, qs, scr, btc)
+    if side == 'Buy':   chaseBuy(client, 'BTCUSD', amnt, scr, wins, conf, sl, tp)
+    else:               chaseSell(client, 'BTCUSD', amnt, scr, wins, conf, sl, tp)
     return True
 
 # chase buy
-def chaseBuy(client: BybitAcct, symbol: str, amnt: int, qs, scr, btc, maxPrice=100000000):
+def chaseBuy(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, conf: dict, sl, tp, maxPrice=100000000):
     spread = client.getSpread(symbol)
     # make the initial order
-    bid = float(spread['bid']['price'])
-    orderId = client.limitOrder(symbol, amnt, bid, 'Buy')
+    bid: float = float(spread['bid']['price'])
+    orderId: str = client.limitOrder(symbol, amnt, bid, 'Buy', sl, tp)
     y, x = scr.getmaxyx()
     orderStatusPage(scr, '-', '-')
     status = ''
     if not orderId:
         return
     while status != 'Filled':
-        runUpdaters(scr, qs, btc)
+        runUpdaters(wins)
         spread = client.getSpread(symbol)
         newBid = float(spread['bid']['price'])
         # check if price greater than max price
@@ -221,7 +218,10 @@ def chaseBuy(client: BybitAcct, symbol: str, amnt: int, qs, scr, btc, maxPrice=1
         # if not, check if the cur bid is greater than cur order bid
         if newBid != bid:
             # if so, adjust cur order bid
+            if conf['autosize']: amnt = int(str(getSize(conf, sl, wins['priceWin'].getAsk(), wins)).split('.')[0])
             orderId = client.replaceOrder(orderId, symbol, str(newBid), str(amnt))
+            if orderId == '-0':
+                return
             bid = newBid
         orderStatus = client.getStatus(symbol, orderId)
         status = orderStatus['order_status']
@@ -229,18 +229,18 @@ def chaseBuy(client: BybitAcct, symbol: str, amnt: int, qs, scr, btc, maxPrice=1
     return orderId
 
 # chase sell
-def chaseSell(client: BybitAcct, symbol: str, amnt: int, qs: list, scr, btc: bool, minPrice=0):
+def chaseSell(client: BybitAcct, symbol: str, amnt: int, scr, wins: dict, conf: dict, sl, tp, minPrice=0):
     spread = client.getSpread(symbol)
     # make the initial order
     ask = float(spread['ask']['price'])
-    orderId = client.limitOrder(symbol, amnt, ask, 'Sell')
+    orderId = client.limitOrder(symbol, amnt, ask, 'Sell', sl, tp)
     y, x = scr.getmaxyx()
     orderStatusPage(scr, '-', '-')
     status = ''
     if not orderId:
         return
     while status != 'Filled':
-        runUpdaters(scr, qs, btc)
+        runUpdaters(wins)
         spread = client.getSpread(symbol)
         newAsk = float(spread['ask']['price'])
         # check if price greater than max price
@@ -256,172 +256,14 @@ def chaseSell(client: BybitAcct, symbol: str, amnt: int, qs: list, scr, btc: boo
         orderStatusPage(scr, orderStatus['cum_exec_qty'], orderStatus['qty'])
     return orderId
 
-def orderStatusPage(scr, filled, total):
-    y, x = scr.getmaxyx()
-    msg = 'Filled Quantity: ' + str(filled) + ' / ' + str(total)
-    scr.addstr(y//2 - 3, x // 2 - len(msg)//2, msg)
-    if filled == '-': return
-    perc: float = float(filled) / float(total)
-    scr.attron(curses.color_pair(3))
-    for i in range(math.floor(perc * 50)-1):
-        scr.addstr(y//2-1, x//2-23 + i, ' ')
-    scr.attroff(curses.color_pair(3))
-    scr.refresh()
+''' UTILITY '''
 
-def makeBox(scr, h: int, w: int, y, x):
-    box = curses.newwin(h, w, y, x)
-    box.border()
-    scr.refresh()
-    box.refresh()
-    return box
-
-''' UPDATERS '''
-
-# starts the updaters
-def startUpdaters():
-    uP, uQ = startPriceUpdater()
-    pP, pQ = startPosUpdater()
-    bP, bQ = startBalUpdater()
-    return [uP, pP, bP], [uQ, pQ, bQ]
-
-# starts price updater
-def startPriceUpdater():
-    q = Queue()
-    p = Process(target=getPrices, args=(q, 1))
-    p.start()
-    return p, q
-
-# starts position updater
-def startPosUpdater():
-    q = Queue()
-    p = Process(target=getPos, args=(q, 1))
-    p.start()
-    return p, q
-
-# starts balance updater
-def startBalUpdater():
-    q = Queue()
-    p = Process(target=getBal, args=(q, 1))
-    p.start()
-    return p, q
-
-# starts the chart updater
-chartStarted = False
-def startChartUpdater(timeP):
-    global chartStarted
-    if chartStarted: return
-    chartStarted = not chartStarted
-    q = Queue()
-    p = Process(target=updateChart, args=(q, timeP))
-    p.start()
-    return p, q
-
-# runs all the updaters
-def runUpdaters(scr, qs, btc):
-    updatePriceDisp(scr, qs[0])
-    updatePosDisp(scr, qs[1])
-    updateBalDisp(scr, qs[2], btc)
-
-# updates the price in the center middle
-prevBid = '00'
-prevAsk = '00'
-def updatePriceDisp(scr, q):
-    global prevBid, prevAsk
-    bid, ask = prevBid, prevAsk
-    while not q.empty():
-        bid, ask = q.get(False)
-        prevBid, prevAsk = bid, ask
-    bid, ask = fixPrice(bid), fixPrice(ask)
-    y, x = scr.getmaxyx()
-    # displays the bid
-    addstr(scr, y//4, x//2 - 5 - len(bid), bid, 2)
-    # displays the ask
-    addstr(scr, y//4, x//2 + 5, ask, 1)
-    scr.refresh()
-
-# updates the position display
-prevPos = {}
-def updatePosDisp(scr, q):
-    global prevPos
-    pos = None
-    while not q.empty():
-        pos = q.get(False)
-        prevPos = pos
-    if pos is None: pos = prevPos
-    y, x = scr.getmaxyx()
-    startY, startX = math.floor(y * .7), x//2 - 40,
-    # startY, startX = math.floor(y * .7), math.floor(x * .01)
-    addstr(scr, startY, startX, 'Positions', 0, bold=True)
-    labels = ['Size', 'Entry Price', 'Unrealized PNL', 'Realized PNL']
-    space = 0
-    # scr.addstr(startY + 1, space, '_________________________________________________________________________________')
-    for val in labels:
-        scr.addstr(startY + 2, startX + space , '|')
-        scr.addstr(startY + 2, startX + space + 10 - (len(val)//2), val, curses.A_UNDERLINE)
-        space += 20
-    scr.addstr(startY + 2, startX + space, '|')
-    space = 0
-    items = ['size', 'entry_price', 'unrealised_pnl', 'realised_pnl']
-    for val in items:
-        scr.addstr(startY + 3, startX + space, '|')
-        try:
-            scr.addstr(startY + 3, startX + space + 10 - (len(str(pos[val]))//2), str(pos[val]))
-        except Exception:
-            pass
-        space += 20
-    # scr.addstr(startY + 4, 0, '_________________________________________________________________________________')
-    scr.addstr(startY + 3, startX + space, '|')
-
-# updates the balance display
-prevBal = 00.00
-def updateBalDisp(scr, q, btc):
-    global prevAsk
-    global prevBal
-    y, x = scr.getmaxyx()
-    info = None
-    while not q.empty():
-        info = q.get(False)
-        prevBal = info['equity']
-    if info is None: bal = prevBal
-    else: bal = info['equity']
-    msg = 'Balance: ₿'
-    scr.addstr(1, x - x//4 + len(msg) + 1, '                 ')
-    if btc:
-        scr.addstr(1, x - x//4 + len(msg) + 1, str(bal))
-    else:
-        msg = 'Balance: $'
-        dolBal = bal*float(prevAsk)
-        dolBal = f"{dolBal:,}"
-        split = dolBal.split('.')
-        dolBal = split[0] + '.' + split[1][0:2]
-        scr.addstr(1, x - x//4 + len(msg) + 1, dolBal)
-    scr.addstr(1, x - x//4, msg)
-
-''' UTILITY FUNCTIONS '''
-
-# adds a 00 or 0 to the price depending on current format
-def fixPrice(price):
-    return price + '.00' if price[-2] != '.' else price + '0'
-
-# auto calcs position size based off risk parameters
-def getSize(conf, sl, price):
-    global prevBal
-    risk = conf['risk'] / 100
-    price = float(price)
-    gap = price - sl
-    lev = 0
-    # long
-    if gap > 0:
-        actRisk = gap / price
-        lev = risk / actRisk
-    # short
-    else:
-        actRisk = (sl / price) - 1
-        lev = risk / actRisk
-    return lev * prevBal * price
+def runUpdaters(wins: dict) -> None:
+    for val in wins.values():
+        val.updateDisp()
 
 # gets a number amount as input from the user
-def getAmnt(msg, scr, qs, btc) -> float:
+def getAmnt(msg: str, scr: Any, wins: dict) -> float:
     scr.clear()
     y, x = scr.getmaxyx()
     scr.addstr(y//2 - 3,x//2 - (len(msg)//2),msg)
@@ -432,12 +274,12 @@ def getAmnt(msg, scr, qs, btc) -> float:
     amnt = ''
     spot = x // 2 - 22
     scr.addstr(y // 2 - 1, spot - 1, '$')
-    runUpdaters(scr, qs, btc)
+    runUpdaters(wins)
     while 1:
         key = scr.getch()
         if key == -1: continue
         val = chr(key)
-        runUpdaters(scr, qs, btc)
+        runUpdaters(wins)
         if key == 10:
             return float(amnt)
         elif key == 263 and len(amnt) != 0:
@@ -460,7 +302,7 @@ def getAmnt(msg, scr, qs, btc) -> float:
     return float(amnt)
 
 # gets a percent input from the user
-def getPcnt(msg, scr) -> float:
+def getPcnt(msg: str, scr: Any) -> float:
     scr.clear()
     y, x = scr.getmaxyx()
     scr.addstr(y//2 - 3,x//2 - (len(msg)//2),msg)
@@ -494,6 +336,22 @@ def getPcnt(msg, scr) -> float:
         time.sleep(.01)
     return float(amnt)
 
+# auto calcs position size based off risk parameters
+def getSize(conf: dict, sl: float, price: str, wins: dict) -> float:
+    risk = conf['risk'] / 100
+    fPrice = float(price)
+    gap = fPrice - sl
+    lev = 0
+    # long
+    if gap > 0:
+        actRisk = gap / fPrice
+        lev = risk / actRisk
+    # short
+    else:
+        actRisk = (sl / fPrice) - 1
+        lev = risk / actRisk
+    return lev * float(wins['balWin'].getBal()) * fPrice
+
 # rewrites the number on the screen
 def rewriteNum(scr, amnt, x, y):
     spot = x // 2 - 22
@@ -509,52 +367,18 @@ def rewriteNum(scr, amnt, x, y):
             spot += 1
     return commas
 
-# puts a menu of items vertically
-def vMenu(scr, row, menuItems):
-    scr.clear()
-    h, w = scr.getmaxyx()
-    for i, val in enumerate(menuItems):
-        x = w//2 - len(val)//2
-        y = h//2 - len(menuItems) + i
-        if row == i:
-            addstr(scr, y, x, val, 1)
-        else:
-            scr.addstr(y,x,val)
+def orderStatusPage(scr, filled, total):
+    y, x = scr.getmaxyx()
+    msg = 'Filled Quantity: ' + str(filled) + ' / ' + str(total)
+    scr.addstr(y//2 - 3, x // 2 - len(msg)//2, msg)
+    if filled == '-': return
+    perc: float = float(filled) / float(total)
+    scr.attron(curses.color_pair(3))
+    for i in range(math.floor(perc * 50)-1):
+        scr.addstr(y//2-1, x//2-23 + i, ' ')
+    scr.attroff(curses.color_pair(3))
     scr.refresh()
 
-# calls even or odd horizontal menu func
-def hMenu(scr, col, menuItems):
-    if len(menuItems) % 2 != 0: oddMenu(scr, col, menuItems)
-    else: evenMenu(scr, col, menuItems)
-
-# puts a menu of items horizontally
-def evenMenu(scr, col, menuItems):
-    h, w = scr.getmaxyx()
-    y = h//2
-    x = w//2 - (10 * (len(menuItems)//2))
-    for i, val in enumerate(menuItems):
-        x += len(val) // 2 + 1
-        if col == i:
-            addstr(scr, y, x, val, 0, stand=True)
-        else:
-            addstr(scr, y, x, val, 0)
-        x += 10
-    scr.refresh()
-
-# puts a menu of items horizontally
-def oddMenu(scr, col, menuItems):
-    # scr.clear()
-    h, w = scr.getmaxyx()
-    y = h//2
-    for i, val in enumerate(menuItems):
-        x = w//2 - (10 * ((len(menuItems)//2) - i)) - (len(val)//2)
-        if col == i:
-            addstr(scr, y, x, val, 0, stand=True)
-        else:
-            addstr(scr, y, x, val, 0)
-    scr.refresh()
-
-# adds a string to the screen with a specified color
 def addstr(scr, y: int, x: int, msg: str, color: int, under: bool = False, bold: bool = False, stand: bool = False):
     attrs = curses.color_pair(color)
     if bold: attrs += curses.A_BOLD
@@ -562,17 +386,21 @@ def addstr(scr, y: int, x: int, msg: str, color: int, under: bool = False, bold:
     if stand: attrs += curses.A_STANDOUT
     scr.addstr(y, x, msg, attrs)
 
-# prints to the text file
-def printt(txt):
-    file = open('./text.txt', 'a')
-    file.write(str(txt) + '\n')
-    file.close()
-
 ''' INITIALIZE FUCTIONS '''
 
+# gets the dictionary of windows
+def getWins(scr: Any) -> dict:
+    x: int = 0
+    y: int = 0
+    y, x = scr.getmaxyx()
+    wins: dict = {}
+    wins['priceWin'] = priceWindow(scr, 3, 40, y//4, x//2-20)
+    wins['posWin'] = posWindow(scr, 4, 80, y - (y//4), x//2-40, wins['priceWin'])
+    wins['balWin'] = balWindow(scr, 3, 30, 1, x - x//4, wins['priceWin'])
+    return wins
+
 # connect to bybit
-def connect(scr, conf):
-    curses.curs_set(0)
+def connect(scr: Any, conf: dict) -> BybitAcct:
     y, x = scr.getmaxyx()
     msg = 'Connecting...'
     scr.addstr(y // 2, x // 2 - len(msg)//2, msg)
@@ -584,18 +412,20 @@ def connect(scr, conf):
     return client
 
 # initializes the color pairs
-def initColors():
+def initColors() -> None:
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.curs_set(False)
 
 # loads the config data
 def loadConfig() -> dict:
     return json.load(open('./config.json', 'r'))
 
-def saveConfig(conf: dict):
+def saveConfig(conf: dict) -> None:
     with open('config.json', 'w') as fp:
         json.dump(conf, fp)
 
 if __name__ == '__main__':
     curses.wrapper(main)
+    quit()
